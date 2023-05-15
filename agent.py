@@ -257,8 +257,8 @@ class Agent:
         return call_ChatGPT(self,prompt,stop=f"</{RESPONSE}>", max_tokens = max_tokens).strip()
     
     def promptf(self, question, memory, facts, split_allowed=True, spaces=0):
-        for i in range(spaces):
-            print(" ",end="")
+        [print(" ", end="") for _ in range(spaces)]
+        
         print(question)
         mem = "".join([self.makeInteraction(p,a, "P", "AI", INTERACTION = "Human-AI") for p,a in memory]) \
             + "".join([self.makeInteraction(p,a, "P", "AI", INTERACTION = "AI-AI") for p,a in facts])
