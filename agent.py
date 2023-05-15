@@ -26,11 +26,11 @@ def print_op(*kargs, **kwargs):
 
 random_fixed_seed = random.Random(4)
 
-open_ai_key="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"
+open_ai_key="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"
 
 os.environ["OPENAI_API_KEY"] = open_ai_key
 # get one from https://openai.com , first few requests are free!
-openai.api_key = "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"
+openai.api_key = "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"
 # get one from https://serpapi.com , first few requests are free!
 serpapi_key = "5488a6deaa28fae3c0dfb45c35e859be542f1cc9ffa8ceeb17f761a6e67565c1"
 googlemaps_key = "AIzaSyCuDg4sfsPEfFdtHmzamt88O2DoMqSWBs4"
@@ -190,7 +190,7 @@ class Agent:
         resp = (requests.get if tool['method'] ==
                 'GET' else requests.post)(**tool_args)
         
-        print_op("FINAL URL: (" + tool["method"] + ") ", resp.url)
+        #print_op("FINAL URL: (" + tool["method"] + ") ", resp.url)
 
         actual_call = str(tool_args)
 
@@ -213,8 +213,10 @@ class Agent:
 
         if len(mem) > 2500:
             mem = mem[0:2500]
-        ret = self.call_gpt(self.bot_str+mem+"\nQ:"+query+"\n An api call about Q returned:\n"+ret+"\nUsing this information, what is the answer to Q? ",None,256)
-            
+        
+        prompt=MSG("system","You are a good and helpful bot"+self.bot_str)
+        prompt+=MSG("user",mem+"\nQ:"+query+"\n An api call about Q returned:\n"+ret+"\nUsing this information, what is the answer to Q?")
+        a = call_ChatGPT(self, prompt, stop="</AI>", max_tokens = 256).strip()
         return ret
 
     def run(self, question, memory):
@@ -254,7 +256,9 @@ class Agent:
         prompt+=MSG("user","<TOOLS>"+tool_context + "</TOOLS>" + "".join(examples) + cur_question)
         return call_ChatGPT(self,prompt,stop=f"</{RESPONSE}>", max_tokens = max_tokens).strip()
     
-    def promptf(self, question, memory, facts, split_allowed=True):
+    def promptf(self, question, memory, facts, split_allowed=True, spaces=0):
+        for i in range(spaces):
+            print(" ",end="")
         print(question)
         mem = "".join([self.makeInteraction(p,a, "P", "AI", INTERACTION = "Human-AI") for p,a in memory]) \
             + "".join([self.makeInteraction(p,a, "P", "AI", INTERACTION = "AI-AI") for p,a in facts])
@@ -263,6 +267,8 @@ class Agent:
             mem = mem[0:2500]
         if split_allowed:
             subq=question_split(question,self.tools,mem)
+            for i in range(spaces):
+                print(" ",end="")
             print(subq[1])
             if len(subq[1])==1:
                 split_allowed=False
@@ -272,7 +278,7 @@ class Agent:
             if split_allowed:
                 for i in range (len(subq)):
                 
-                    _, new_facts= self.promptf(subq[i], memory, facts, split_allowed=split_allowed)
+                    _, new_facts= self.promptf(subq[i], memory, facts, split_allowed=split_allowed, spaces=spaces+4)
                     facts=facts+new_facts
                     mem = "".join([self.makeInteraction(p,a, "P", "AI", INTERACTION = "Human-AI") for p,a in memory]) \
                         + "".join([self.makeInteraction(p,a, "P", "AI", INTERACTION = "AI-AI") for p,a in facts])
@@ -288,7 +294,7 @@ class Agent:
         if answer_in_memory: 
            
             prompt=MSG("system","You are a good and helpful bot"+self.bot_str)
-            prompt+=MSG("user",mem+"\nQ:"+question+"\nUSE THE CONTEXT TO ANSWER Q, DO NOT MAKE UP INFORMATION.")
+            prompt+=MSG("user",mem+"\nQ:"+question+"\nANSWER Q, DO NOT MAKE UP INFORMATION.")
             a = call_ChatGPT(self, prompt, stop="</AI>", max_tokens = 256).strip()
             print(a.replace("\n",""))
             return (a.replace("\n",""), [(question, a)])
@@ -324,8 +330,10 @@ class Agent:
         if "ai_response_prompt" in self.tools[tool_to_use].keys():
             query=self.tools[tool_to_use]["ai_response_prompt"]
         answer = self.use_tool(self.tools[tool_to_use], tool_input, question, memory, facts, query=query)
-        
-        print(answer)
+        for i in range(spaces):
+            print(" ",end="")
+        print(question)
+        print(answer.replace("/n",""))
         return (answer, [(question, answer)])
 
     def call_gpt(self, cur_prompt: str, stop: str, max_tokens = 20, quality = "best", temperature = 0.0):
