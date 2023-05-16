@@ -4,10 +4,12 @@ from urllib.parse import urlencode
 import urllib.parse as urlparse
 import openai
 import json
-from llama_index import Document, GPTTreeIndex
 import requests
 import os
 import random
+import spacy
+nlp =  spacy.load("en_core_web_md")
+from math import sqrt, pow, exp
 try:
     from .bothandler import question_split,tool_picker,memory_check, replace_variables_for_values
 except:
@@ -26,11 +28,11 @@ def print_op(*kargs, **kwargs):
 
 random_fixed_seed = random.Random(4)
 
-open_ai_key="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"
+open_ai_key="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"
 
 os.environ["OPENAI_API_KEY"] = open_ai_key
 # get one from https://openai.com , first few requests are free!
-openai.api_key = "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"
+openai.api_key = "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"
 # get one from https://serpapi.com , first few requests are free!
 serpapi_key = "5488a6deaa28fae3c0dfb45c35e859be542f1cc9ffa8ceeb17f761a6e67565c1"
 googlemaps_key = "AIzaSyCuDg4sfsPEfFdtHmzamt88O2DoMqSWBs4"
@@ -106,8 +108,18 @@ def buildGenericTools():
 
 
 generic_tools = buildGenericTools()
+ 
+def squared_sum(x):
+  """ return 3 rounded square rooted value """
+ 
+  return round(sqrt(sum([a*a for a in x])),3)
 
-
+def cos_similarity(x,y):
+  """ return cosine similarity between two lists """
+ 
+  numerator = sum(a*b for a,b in zip(x,y))
+  denominator = squared_sum(x)*squared_sum(y)
+  return round(numerator/float(denominator),3)
 
 class Agent:
     def __init__(self, openai_key, tools, bot_str="", verbose = 4):
@@ -157,11 +169,10 @@ class Agent:
 
         if self.verbose > 1:
             print_op("GPT SUGGESTED INPUT:", gpt_suggested_input)
-        try:
-            parsed_gpt_suggested_input = json.loads(gpt_suggested_input)
+        
+        parsed_gpt_suggested_input = json.loads(gpt_suggested_input)
             
-        except:
-            return "Invalid Input"
+    
         
         #make sure all of the suggested fields exist in the tool desc
         for i in parsed_gpt_suggested_input.keys():
@@ -212,12 +223,12 @@ class Agent:
         + "".join([self.makeInteraction(p,a, "P", "AI", INTERACTION = "AI-AI") for p,a in facts])
 
         if len(mem) > 2500:
-            mem = mem[0:2500]
+            mem = mem[-2500]
         
         prompt=MSG("system","You are a good and helpful bot"+self.bot_str)
         prompt+=MSG("user",mem+"\nQ:"+query+"\n An api call about Q returned:\n"+ret+"\nUsing this information, what is the answer to Q?")
         a = call_ChatGPT(self, prompt, stop="</AI>", max_tokens = 256).strip()
-        return ret
+        return a
 
     def run(self, question, memory):
         self.price = 0
@@ -235,12 +246,11 @@ class Agent:
 
     def make_sub(self, tools, memory, facts, question, subq, answer_label, toolEx, tool_to_use = None, bot_str = "", quality= "best", max_tokens = 20):
         tool_context = "".join([self.makeToolDesc(t) for t,_ in tools])
-
-        def makeQuestion(memory, question, tool = None):
-            mem = "".join([self.makeInteraction(p,a, "P", "AI", INTERACTION = "Human-AI") for p,a in memory]) \
+        mem = "".join([self.makeInteraction(p,a, "P", "AI", INTERACTION = "Human-AI") for p,a in memory]) \
                 + "".join([self.makeInteraction(p,a, "P", "AI", INTERACTION = "AI-AI") for p,a in facts])
+        def makeQuestion(memory, question, tool = None):
+            
             return f"\n\n<{EXAMPLE}>\n" \
-                + f"<{CONVERSATION}>{mem}</{CONVERSATION}>\n" \
                 + f"<{QUESTION}>{question}</{QUESTION}>\n" \
                 + f"<{THOUGHT}><{PROMPT}>{subq(tool)}</{PROMPT}>\n<{RESPONSE} ty={answer_label}>\n"
 
@@ -251,7 +261,7 @@ class Agent:
 
         random_fixed_seed.shuffle(examples)
 
-        cur_question = makeQuestion(memory, question, tool = tool_to_use)
+        cur_question = f"<{CONVERSATION}>{mem}</{CONVERSATION}>" + makeQuestion(memory, question, tool = tool_to_use) 
         prompt=MSG("system","You are a good and helpful assistant.")
         prompt+=MSG("user","<TOOLS>"+tool_context + "</TOOLS>" + "".join(examples) + cur_question)
         return call_ChatGPT(self,prompt,stop=f"</{RESPONSE}>", max_tokens = max_tokens).strip()
@@ -262,29 +272,38 @@ class Agent:
         print(question)
         mem = "".join([self.makeInteraction(p,a, "P", "AI", INTERACTION = "Human-AI") for p,a in memory]) \
             + "".join([self.makeInteraction(p,a, "P", "AI", INTERACTION = "AI-AI") for p,a in facts])
-       
         if len(mem) > 2500:
-            mem = mem[0:2500]
+            mem = mem[-2500]
         if split_allowed:
             subq=question_split(question,self.tools,mem)
             for i in range(spaces):
                 print(" ",end="")
+            subq_final=[]
             print(subq[1])
             if len(subq[1])==1:
                 split_allowed=False
+
+            else:
+
+                for i in subq[1]:
+                    print(i,str(cos_similarity(nlp(question).vector, nlp(i).vector)))
+                    if cos_similarity(nlp(question).vector, nlp(i).vector) < 0.95:
+                        subq_final.append(i)
+                    else:    
+                        print("DELETING:",i)
             self.price+=subq[0]
-            subq=subq[1]
             new_facts=[]
+            print("FINAL:",subq_final)
             if split_allowed:
-                for i in range (len(subq)):
-                
-                    _, new_facts= self.promptf(subq[i], memory, facts, split_allowed=split_allowed, spaces=spaces+4)
+                for i in range (len(subq_final)):
+                    
+                    _, new_facts= self.promptf(subq_final[i], memory, facts, split_allowed=split_allowed, spaces=spaces+4)
                     facts=facts+new_facts
                     mem = "".join([self.makeInteraction(p,a, "P", "AI", INTERACTION = "Human-AI") for p,a in memory]) \
                         + "".join([self.makeInteraction(p,a, "P", "AI", INTERACTION = "AI-AI") for p,a in facts])
-            
+
                 if len(mem) > 2500:
-                    mem = mem[0:2500]
+                    mem = mem[-2500]
         
         
         
@@ -332,7 +351,6 @@ class Agent:
         answer = self.use_tool(self.tools[tool_to_use], tool_input, question, memory, facts, query=query)
         for i in range(spaces):
             print(" ",end="")
-        print(question)
         print(answer.replace("/n",""))
         return (answer, [(question, answer)])
 
@@ -388,11 +406,9 @@ if __name__ == "__main__":
         #tools = [{'method': 'GET',"description":"use this tool to find the price of stocks",'args' : {"url":"https://finnhub.io/api/v1/quote",'params': { 'token' :'cfi1v29r01qq9nt1nu4gcfi1v29r01qq9nt1nu50'} },"dynamic_params":{"symbol":"the symbol of the stock"}}]
         tools =  [{'method': 'GET', "dynamic_params":{ 'location': 'This string indicates the geographic area to be used when searching for businesses. \
         Examples: "New York City", "NYC", "350 5th Ave, New York, NY 10118".', 'term': 'Search term, e.g. "food" or "restaurants". The \
-        term may also be the business\'s name, such as "Starbucks"', 'price': 'Pricing levels to filter the search result with: 1 = \
-        $, 2 = $$, 3 = $$$, 4 = $$$$. The price filter can be a list of comma delimited pricing levels. e.g., "1, 2, 3" will filter the \
-        results to show the ones that are $, $$, or $$$.'},"description":"This tool searches for a business on yelp.  It's useful for finding restaurants and \
+        term may also be the business\'s name, such as "Starbucks"'},"description":"This tool searches for a business on yelp.  It's useful for finding restaurants and \
         whatnot.",'args' :{'url': 'https://api.yelp.com/v3/businesses/search', 'cert': '', 'json': {}, 'params': {'limit': '1', 
-        'open_now': 'true', 'location': '{location}', 'term': '{term}', 'price': '{price}'}, 'data': {}, 
+        'open_now': 'true', 'location': '{location}', 'term': '{term}'}, 'data': {}, 
         'headers': {'authorization': 'Bearer OaEqVSw9OV6llVnvh9IJo92ZCnseQ9tftnUUVwjYXTNzPxDjxRafYkz99oJKI9WHEwUYkiwULXjoBcLJm7JhHj479Xqv6C0lKVXS7N91ni-nRWpGomaPkZ6Z1T0GZHYx', 
         'accept': 'application/json'}}}]
         
