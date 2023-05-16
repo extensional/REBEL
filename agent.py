@@ -267,8 +267,8 @@ class Agent:
         return call_ChatGPT(self,prompt,stop=f"</{RESPONSE}>", max_tokens = max_tokens).strip()
     
     def promptf(self, question, memory, facts, split_allowed=True, spaces=0):
-        for i in range(spaces):
-            print(" ",end="")
+        print(" " * spaces, end="")
+        
         print(question)
         mem = "".join([self.makeInteraction(p,a, "P", "AI", INTERACTION = "Human-AI") for p,a in memory]) \
             + "".join([self.makeInteraction(p,a, "P", "AI", INTERACTION = "AI-AI") for p,a in facts])
@@ -276,8 +276,8 @@ class Agent:
             mem = mem[-2500]
         if split_allowed:
             subq=question_split(question,self.tools,mem)
-            for i in range(spaces):
-                print(" ",end="")
+            print(" " * spaces, end="")
+            
             subq_final=[]
             print(subq[1])
             if len(subq[1])==1:
@@ -349,8 +349,8 @@ class Agent:
         if "ai_response_prompt" in self.tools[tool_to_use].keys():
             query=self.tools[tool_to_use]["ai_response_prompt"]
         answer = self.use_tool(self.tools[tool_to_use], tool_input, question, memory, facts, query=query)
-        for i in range(spaces):
-            print(" ",end="")
+        print(" " * spaces, end="")
+        
         print(answer.replace("/n",""))
         return (answer, [(question, answer)])
 
