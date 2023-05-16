@@ -24,6 +24,7 @@ def MSG(u, c):
     return [{'role': u, 'content' : c}]
 
 def call_ChatGPT(state, cur_prompt, stop = None, max_tokens = 20, temperature = 0.2):
+   
     if state.verbose > 1:
         print_op("\nGPT input for {" +str(stop) + "} "+ str(len(cur_prompt)) + ".")
     if state.verbose > 2:

@@ -28,11 +28,11 @@ def print_op(*kargs, **kwargs):
 
 random_fixed_seed = random.Random(4)
 
-open_ai_key="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"
+open_ai_key="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"
 
 os.environ["OPENAI_API_KEY"] = open_ai_key
 # get one from https://openai.com , first few requests are free!
-openai.api_key = "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"
+openai.api_key = "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"
 # get one from https://serpapi.com , first few requests are free!
 serpapi_key = "5488a6deaa28fae3c0dfb45c35e859be542f1cc9ffa8ceeb17f761a6e67565c1"
 googlemaps_key = "AIzaSyCuDg4sfsPEfFdtHmzamt88O2DoMqSWBs4"
@@ -210,23 +210,19 @@ class Agent:
             return "This tool isn't working currently" + er
 
         ret = str(resp.text)
+        if self.verbose > 1:
+            print(ret)
         try:
             ret = str(json.loads(ret))
         except:
             pass
 
-        if len(ret) > 1000:
-            ret = ret[0:1000]
-                
-      
-        mem = "".join([self.makeInteraction(p,a, "P", "AI", INTERACTION = "Human-AI") for p,a in memory]) \
-        + "".join([self.makeInteraction(p,a, "P", "AI", INTERACTION = "AI-AI") for p,a in facts])
-
-        if len(mem) > 2500:
-            mem = mem[-2500]
+        if len(ret) > 10000:
+            ret = ret[0:10000]
         
+    
         prompt=MSG("system","You are a good and helpful bot"+self.bot_str)
-        prompt+=MSG("user",mem+"\nQ:"+query+"\n An api call about Q returned:\n"+ret+"\nUsing this information, what is the answer to Q?")
+        prompt+=MSG("user","\nQ:"+query+"\n An api call about Q returned:\n"+ret+"\nUsing this information, what is the answer to Q?")
         a = call_ChatGPT(self, prompt, stop="</AI>", max_tokens = 256).strip()
         return a
 
@@ -272,8 +268,7 @@ class Agent:
         print(question)
         mem = "".join([self.makeInteraction(p,a, "P", "AI", INTERACTION = "Human-AI") for p,a in memory]) \
             + "".join([self.makeInteraction(p,a, "P", "AI", INTERACTION = "AI-AI") for p,a in facts])
-        if len(mem) > 2500:
-            mem = mem[-2500]
+    
         if split_allowed:
             subq=question_split(question,self.tools,mem)
             for i in range(spaces):
@@ -286,14 +281,14 @@ class Agent:
             else:
 
                 for i in subq[1]:
-                    print(i,str(cos_similarity(nlp(question).vector, nlp(i).vector)))
-                    if cos_similarity(nlp(question).vector, nlp(i).vector) < 0.95:
+                    
+                    if cos_similarity(nlp(question).vector, nlp(i).vector) < 0.98 :
                         subq_final.append(i)
                     else:    
-                        print("DELETING:",i)
+                        split_allowed = False
+                        break
             self.price+=subq[0]
             new_facts=[]
-            print("FINAL:",subq_final)
             if split_allowed:
                 for i in range (len(subq_final)):
                     
@@ -302,8 +297,7 @@ class Agent:
                     mem = "".join([self.makeInteraction(p,a, "P", "AI", INTERACTION = "Human-AI") for p,a in memory]) \
                         + "".join([self.makeInteraction(p,a, "P", "AI", INTERACTION = "AI-AI") for p,a in facts])
 
-                if len(mem) > 2500:
-                    mem = mem[-2500]
+                
         
         
         
