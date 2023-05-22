@@ -28,11 +28,11 @@ def print_op(*kargs, **kwargs):
 
 random_fixed_seed = random.Random(4)
 
-open_ai_key="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"
+open_ai_key="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"
 
 os.environ["OPENAI_API_KEY"] = open_ai_key
 # get one from https://openai.com , first few requests are free!
-openai.api_key = "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"
+openai.api_key = "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"
 # get one from https://serpapi.com , first few requests are free!
 serpapi_key = "5488a6deaa28fae3c0dfb45c35e859be542f1cc9ffa8ceeb17f761a6e67565c1"
 googlemaps_key = "AIzaSyCuDg4sfsPEfFdtHmzamt88O2DoMqSWBs4"
@@ -210,7 +210,7 @@ class Agent:
             return "This tool isn't working currently" + er
 
         ret = str(resp.text)
-        if self.verbose > 1:
+        if self.verbose > 4:
             print(ret)
         try:
             ret = str(json.loads(ret))
@@ -219,10 +219,11 @@ class Agent:
 
         if len(ret) > 10000:
             ret = ret[0:10000]
-        
-    
+        mem = "".join([self.makeInteraction(p,a, "P", "AI", INTERACTION = "Human-AI") for p,a in memory]) \
+                    + "".join([self.makeInteraction(p,a, "P", "AI", INTERACTION = "AI-AI") for p,a in facts])
+       
         prompt=MSG("system","You are a good and helpful bot"+self.bot_str)
-        prompt+=MSG("user","\nQ:"+query+"\n An api call about Q returned:\n"+ret+"\nUsing this information, what is the answer to Q?")
+        prompt+=MSG("user",mem+"\nQ:"+query+"\n An api call about Q returned:\n"+ret+"\nUsing this information, what is the answer to Q?")
         a = call_ChatGPT(self, prompt, stop="</AI>", max_tokens = 256).strip()
         return a
 
@@ -256,7 +257,7 @@ class Agent:
                 examples += [makeQuestion(tool_example[0], tool_example[1], tool_id) + toolEx(tool_id, tool_example) + f"</{RESPONSE}></{THOUGHT}></{EXAMPLE}>"]
 
         random_fixed_seed.shuffle(examples)
-
+        
         cur_question = f"<{CONVERSATION}>{mem}</{CONVERSATION}>" + makeQuestion(memory, question, tool = tool_to_use) 
         prompt=MSG("system","You are a good and helpful assistant.")
         prompt+=MSG("user","<TOOLS>"+tool_context + "</TOOLS>" + "".join(examples) + cur_question)
@@ -286,16 +287,16 @@ class Agent:
                         subq_final.append(i)
                     else:    
                         split_allowed = False
-                        break
+                        
             self.price+=subq[0]
             new_facts=[]
-            if split_allowed:
-                for i in range (len(subq_final)):
-                    
-                    _, new_facts= self.promptf(subq_final[i], memory, facts, split_allowed=split_allowed, spaces=spaces+4)
-                    facts=facts+new_facts
-                    mem = "".join([self.makeInteraction(p,a, "P", "AI", INTERACTION = "Human-AI") for p,a in memory]) \
-                        + "".join([self.makeInteraction(p,a, "P", "AI", INTERACTION = "AI-AI") for p,a in facts])
+            
+            for i in range (len(subq_final)):
+                
+                _, new_facts= self.promptf(subq_final[i], memory, facts, split_allowed=split_allowed, spaces=spaces+4)
+                facts=facts+new_facts
+                mem = "".join([self.makeInteraction(p,a, "P", "AI", INTERACTION = "Human-AI") for p,a in memory]) \
+                    + "".join([self.makeInteraction(p,a, "P", "AI", INTERACTION = "AI-AI") for p,a in facts])
 
                 
         
@@ -327,7 +328,6 @@ class Agent:
             a = call_ChatGPT(self, prompt, stop="</AI>", max_tokens = 256).strip()
             print(a.replace("\n",""))
             return (a.replace("\n",""), [(question, a)])
-       
         tool_input = self.make_sub(list(enumerate(self.tools)),
                                     memory, facts, 
                                     question, 
@@ -414,7 +414,7 @@ if __name__ == "__main__":
                 'examples' : []}] 
         '''
 
-        a = Agent(open_ai_key, tools,verbose=-1)
+        a = Agent(open_ai_key, tools,verbose=3)
         mem = []
         last = ""
         while True:

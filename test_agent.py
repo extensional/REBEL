@@ -27,28 +27,33 @@ class suppress_output:
         if self.suppress_stderr:
             sys.stderr = self._stderr
 
-openai.api_key = "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"
+openai.api_key = "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"
+agen = Agent(openai.api_key,[], verbose=-1)
+
 f = open("compositional_celebrities.json")
 data = json.load(f)
 category = []
-q_and_a=[]
+q_and_a={}
 for i in data["data"]:
     if i["category"] in ['birthplace_rounded_lat', 'birthplace_rounded_lng', 'birthplace_tld', 'birthplace_ccn3', 'birthplace_currency', 'birthplace_currency_short', 'birthplace_currency_symbol', 'birthplace_jpn_common_name', 'birthplace_spa_common_name', 'birthplace_rus_common_name', 'birthplace_est_common_name', 'birthplace_urd_common_name', 'birthplace_callingcode', 'birthyear_nobelLiterature', 'birthdate_uspresident', 'birthyear_masterchamp']:
-        q_and_a.append((i["Question"],i["Answer"]))
-    if i["category"] not in category:
-        category.append(i["category"])
-agen = Agent(openai.api_key,[], verbose=-1)
+        if i["category"] not in category:
+            category.append(i["category"])
+            q_and_a.update({i["category"]:[(i["Question"],i["Answer"])]})
+        else:
+            q_and_a[i["category"]].append((i["Question"],i["Answer"]))
 
-counter=0
-for j in q_and_a:
-    time.sleep(30)
-    if counter==2000:
-        break
+op = ['birthplace_rounded_lat', 'birthplace_rounded_lng', 'birthplace_tld', 'birthplace_ccn3', 'birthplace_currency', 'birthplace_currency_short', 'birthplace_currency_symbol', 'birthplace_jpn_common_name', 'birthplace_spa_common_name', 'birthplace_rus_common_name', 'birthplace_est_common_name', 'birthplace_urd_common_name', 'birthplace_callingcode', 'birthyear_nobelLiterature', 'birthdate_uspresident', 'birthyear_masterchamp']
+for j in op:
+    print(j)
+idx=int(input())
+
+choice=op[idx]
+for i in range(100):
     with suppress_output(suppress_stdout=True, suppress_stderr=True):
         try:
-            a=agen.run(j[0],[])
-        except:
-            a = "agent had an issue"
-    print(str(counter)+"|",a[0]+"|",j[1][0])
-    counter += 1
+            a=agen.run(q_and_a[choice][i][0],[])
+        except Exception as e:
+            a = [e,""]
+    print(str(i)+"|",str(a[0])+"|",q_and_a[choice][i][1])
+
 
