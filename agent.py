@@ -28,11 +28,11 @@ def print_op(*kargs, **kwargs):
 
 random_fixed_seed = random.Random(4)
 
-open_ai_key="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"
+open_ai_key=""
 
 os.environ["OPENAI_API_KEY"] = open_ai_key
 # get one from https://openai.com , first few requests are free!
-openai.api_key = "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"
+openai.api_key = ""
 # get one from https://serpapi.com , first few requests are free!
 serpapi_key = "5488a6deaa28fae3c0dfb45c35e859be542f1cc9ffa8ceeb17f761a6e67565c1"
 googlemaps_key = "AIzaSyCuDg4sfsPEfFdtHmzamt88O2DoMqSWBs4"
