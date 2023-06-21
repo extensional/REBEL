@@ -57,7 +57,7 @@ To install and run the REBEL repository locally, follow these steps:
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/your-username/awesome-project.git
+git clone https://github.com/extensional/REBEL.git
 
 ```
 2.Install requirements
