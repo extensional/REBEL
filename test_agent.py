@@ -27,7 +27,7 @@ class suppress_output:
         if self.suppress_stderr:
             sys.stderr = self._stderr
 
-openai.api_key = "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"
+openai.api_key = ""
 agen = Agent(openai.api_key,[], verbose=-1)
 
 f = open("compositional_celebrities.json")

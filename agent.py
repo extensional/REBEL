@@ -28,12 +28,12 @@ def print_op(*kargs, **kwargs):
 
 random_fixed_seed = random.Random(4)
 
-os.environ["OPENAI_API_KEY"] = "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"
-# get one from https://openai.com , first few requests are free!
-openai.api_key = "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"
-# get one from https://serpapi.com , first few requests are free!
-serpapi_key = "5488a6deaa28fae3c0dfb45c35e859be542f1cc9ffa8ceeb17f761a6e67565c1"
-googlemaps_key = "AIzaSyCuDg4sfsPEfFdtHmzamt88O2DoMqSWBs4"
+os.environ["OPENAI_API_KEY"] = ""
+
+openai.api_key = ""
+
+serpapi_key = ""
+googlemaps_key = ""
 
 QUALITY = 0.2
 
@@ -392,18 +392,7 @@ class Agent:
 
 # print_op(google(' {"question": ""}'))
 if __name__ == "__main__":
-  
-    
-    
-        #tools = [{'method': 'GET',"description":"use this tool to find the price of stocks",'args' : {"url":"https://finnhub.io/api/v1/quote",'params': { 'token' :'cfi1v29r01qq9nt1nu4gcfi1v29r01qq9nt1nu50'} },"dynamic_params":{"symbol":"the symbol of the stock"}}]
-        tools =  [{'method': 'GET', "dynamic_params":{ 'location': 'This string indicates the geographic area to be used when searching for businesses. \
-        Examples: "New York City", "NYC", "350 5th Ave, New York, NY 10118".', 'term': 'Search term, e.g. "food" or "restaurants". The \
-        term may also be the business\'s name, such as "Starbucks"'},"description":"This tool searches for a business on yelp.  It's useful for finding restaurants and \
-        whatnot.",'args' :{'url': 'https://api.yelp.com/v3/businesses/search', 'cert': '', 'json': {}, 'params': {'limit': '1', 
-        'open_now': 'true', 'location': '{location}', 'term': '{term}'}, 'data': {}, 
-        'headers': {'authorization': 'Bearer OaEqVSw9OV6llVnvh9IJo92ZCnseQ9tftnUUVwjYXTNzPxDjxRafYkz99oJKI9WHEwUYkiwULXjoBcLJm7JhHj479Xqv6C0lKVXS7N91ni-nRWpGomaPkZ6Z1T0GZHYx', 
-        'accept': 'application/json'}}}]
-        
+
 
         a = Agent(os.environ["OPENAI_API_KEY"], tools,verbose=2)
         mem = []
