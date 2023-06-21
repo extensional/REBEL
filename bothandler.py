@@ -1,5 +1,5 @@
 import openai
-openai.api_key = "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"
+openai.api_key = "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"
 import re
 
       

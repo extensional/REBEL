@@ -27,7 +27,7 @@ class suppress_output:
         if self.suppress_stderr:
             sys.stderr = self._stderr
 
-openai.api_key = "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"
+openai.api_key = "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"
 agen = Agent(openai.api_key,[], verbose=-1)
 
 f = open("compositional_celebrities.json")
@@ -43,8 +43,8 @@ for i in data["data"]:
             q_and_a[i["category"]].append((i["Question"],i["Answer"]))
 
 op = ['birthplace_rounded_lat', 'birthplace_rounded_lng', 'birthplace_tld', 'birthplace_ccn3', 'birthplace_currency', 'birthplace_currency_short', 'birthplace_currency_symbol', 'birthplace_jpn_common_name', 'birthplace_spa_common_name', 'birthplace_rus_common_name', 'birthplace_est_common_name', 'birthplace_urd_common_name', 'birthplace_callingcode', 'birthyear_nobelLiterature', 'birthdate_uspresident', 'birthyear_masterchamp']
-for j in op:
-    print(j)
+for j in range(0,len(op)):
+    print(j,op[j])
 idx=int(input())
 
 choice=op[idx]

@@ -28,11 +28,9 @@ def print_op(*kargs, **kwargs):
 
 random_fixed_seed = random.Random(4)
 
-open_ai_key="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"
-
-os.environ["OPENAI_API_KEY"] = open_ai_key
+os.environ["OPENAI_API_KEY"] = "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"
 # get one from https://openai.com , first few requests are free!
-openai.api_key = "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"
+openai.api_key = "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"
 # get one from https://serpapi.com , first few requests are free!
 serpapi_key = "5488a6deaa28fae3c0dfb45c35e859be542f1cc9ffa8ceeb17f761a6e67565c1"
 googlemaps_key = "AIzaSyCuDg4sfsPEfFdtHmzamt88O2DoMqSWBs4"
@@ -406,15 +404,8 @@ if __name__ == "__main__":
         'headers': {'authorization': 'Bearer OaEqVSw9OV6llVnvh9IJo92ZCnseQ9tftnUUVwjYXTNzPxDjxRafYkz99oJKI9WHEwUYkiwULXjoBcLJm7JhHj479Xqv6C0lKVXS7N91ni-nRWpGomaPkZ6Z1T0GZHYx', 
         'accept': 'application/json'}}}]
         
-        '''
-        # nytimes
-        tools += [{'url': "https://api.nytimes.com/svc/mostpopular/v2/viewed/1.json?api-key=YAKJdTt2RhGZfFNSwEfZTmQmloUGmMjL",
-                'description': "use this tool to find the top news stories of the day", 
-                'params': [],
-                'examples' : []}] 
-        '''
 
-        a = Agent(open_ai_key, tools,verbose=3)
+        a = Agent(os.environ["OPENAI_API_KEY"], tools,verbose=2)
         mem = []
         last = ""
         while True:
