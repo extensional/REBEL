@@ -6,13 +6,8 @@
 
 - [Abstract](#abstract)
 - [Authors](#authors)
-- [Website](#website)
-- [Social Media](#social-media)
-- [Reproducibility](#reproducibility)
-- [News](#news)
-- [Performance Charts](#performance-charts)
-- [Sources & Citations](#Data-sources-and-Citations)
-- [Cite this paper](#Citation)
+- [Reproducibility](## Reproducibility)
+
 
 ## Abstract
 
