@@ -56,10 +56,16 @@ Feel free to reach out to us if you have any questions or feedback. Happy coding
 To install and run the REBEL repository locally, follow these steps:
 
 1. Clone the repository:
-
 ```bash
 git clone https://github.com/your-username/awesome-project.git
 
+```
+2.Install requirements
+```bash
+pip install -r requirements.txt
+```
 
-
+3. Run test_agent.py to evaluate on Compositional Celebrities.
+```bash
+python test_agent.py
 ```
